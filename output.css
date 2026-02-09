@@ -1,0 +1,54 @@
+.card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 350px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: "Arial", sans-serif;
+  color: #2c3e50;
+  border: 1px solid #eee;
+  margin: 20px auto;
+}
+.card__image {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  height: 200px;
+  object-fit: cover;
+}
+.card__title {
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: #e74c3c;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 8px;
+}
+.card__description {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  color: #555;
+}
+.card__description strong {
+  color: #e74c3c;
+}
+.card__button {
+  padding: 12px 24px;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+.card__button:hover {
+  background-color: rgb(29.661971831, 132.338028169, 73.014084507);
+}
+
+/*# sourceMappingURL=output.css.map */

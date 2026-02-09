@@ -1,0 +1,75 @@
+// ПЕРЕМЕННЫЕ (2+ по заданию)
+$primary-color: #e74c3c;    // Красный цвет для акцентов
+$secondary-color: #27ae60;  // Зеленый цвет для кнопки
+$card-bg: #ffffff;          // Фон карточки (доп)
+$text-color: #2c3e50;       // Цвет текста (доп)
+$padding: 20px;             // Отступы (доп)
+
+// МИКСИН (1+ по заданию)
+@mixin button-style($bg-color) {
+  padding: 12px 24px;
+  background-color: $bg-color;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: background-color 0.3s ease;
+  width: 100%;
+
+  &:hover {
+    background-color: darken($bg-color, 10%);
+  }
+}
+
+// СТИЛИ КАРТОЧКИ с ВЛОЖЕННОСТЬЮ
+.card {
+  background-color: $card-bg;
+  border-radius: 12px;
+  padding: $padding;
+  max-width: 350px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+  color: $text-color;
+  border: 1px solid #eee;
+  margin: 20px auto;
+
+  // Вложенность: изображение
+  &__image {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    height: 200px;
+    object-fit: cover;
+  }
+
+  // Вложенность: заголовок
+  &__title {
+    font-size: 24px;
+    margin-bottom: 12px;
+    color: $primary-color;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+  }
+
+  // Вложенность: описание
+  &__description {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #555;
+
+    strong {
+      color: $primary-color;
+    }
+  }
+
+  // Вложенность: кнопка
+  &__button {
+    @include button-style($secondary-color); // Используем миксин
+  }
+}
