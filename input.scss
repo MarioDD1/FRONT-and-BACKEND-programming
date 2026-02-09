@@ -161,15 +161,6 @@ body {
     &--primary {
         @include btn($primary, black);
     }
-    
-    &--secondary {
-        @include btn(transparent, $light);
-        border: 1px solid $gray !important;
-        
-        &:hover {
-            background: rgba(255,255,255,0.1);
-        }
-    }
 }
 
 // Для адаптивности
