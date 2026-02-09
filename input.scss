@@ -1,75 +1,196 @@
-// ПЕРЕМЕННЫЕ (2+ по заданию)
-$primary-color: #e74c3c;    // Красный цвет для акцентов
-$secondary-color: #27ae60;  // Зеленый цвет для кнопки
-$card-bg: #ffffff;          // Фон карточки (доп)
-$text-color: #2c3e50;       // Цвет текста (доп)
-$padding: 20px;             // Отступы (доп)
+// Переменные
+$primary: #d4af37;
+$secondary: #8b0000;
+$dark: #1a1a2e;
+$light: #f0f0f0;
+$gray: #b0b0b0;
 
-// МИКСИН (1+ по заданию)
-@mixin button-style($bg-color) {
-  padding: 12px 24px;
-  background-color: $bg-color;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  transition: background-color 0.3s ease;
-  width: 100%;
-
-  &:hover {
-    background-color: darken($bg-color, 10%);
-  }
+// Миксин для кнопок
+@mixin btn($bg, $color: white) {
+    background: $bg;
+    color: $color;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+    font-size: 14px;
+    
+    &:hover {
+        background: darken($bg, 10%);
+        transform: translateY(-2px);
+    }
 }
 
-// СТИЛИ КАРТОЧКИ с ВЛОЖЕННОСТЬЮ
+// Стили
+body {
+    background: linear-gradient(135deg, #0f0c29, #302b63);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
 .card {
-  background-color: $card-bg;
-  border-radius: 12px;
-  padding: $padding;
-  max-width: 350px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  font-family: 'Arial', sans-serif;
-  color: $text-color;
-  border: 1px solid #eee;
-  margin: 20px auto;
-
-  // Вложенность: изображение
-  &__image {
+    background: $dark;
+    color: $light;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 320px;
     width: 100%;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    height: 200px;
-    object-fit: cover;
-  }
-
-  // Вложенность: заголовок
-  &__title {
-    font-size: 24px;
-    margin-bottom: 12px;
-    color: $primary-color;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 8px;
-  }
-
-  // Вложенность: описание
-  &__description {
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    color: #555;
-
-    strong {
-      color: $primary-color;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    
+    &__header {
+        background: linear-gradient(90deg, $secondary, $primary);
+        padding: 12px 15px;
+        text-align: center;
+         display: flex; 
+         justify-content: center; 
+         align-items: center; 
     }
-  }
+    
+    &__rarity {
+        background: rgba(0,0,0,0.3);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    
+    &__image {
+        position: relative;
+        padding: 20px;
+        background: #2d3047;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        min-height: 220px; // Минимальная высота для контейнера
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    &__image img {
+        max-width: 100%;
+        max-height: 200px;
+        width: auto;
+        height: auto;
+        border-radius: 8px;
+        object-fit: contain; // Сохраняет пропорции изображения
+        display: block;
+    }
+    
+    &__float {
+        position: absolute;
+        top: 25px;
+        right: 25px;
+        background: rgba(0,0,0,0.8);
+        color: $primary;
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        border: 1px solid rgba($primary, 0.3);
+    }
+    
+    &__content {
+        padding: 20px;
+    }
+    
+    &__title {
+        color: $primary;
+        margin: 0 0 5px 0;
+        font-size: 24px;
+        font-weight: 700;
+    }
+    
+    &__subtitle {
+        color: $gray;
+        margin: 0 0 15px 0;
+        font-size: 14px;
+    }
+    
+    &__description {
+        color: $gray;
+        line-height: 1.5;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+    
+    &__info {
+        background: rgba(45,48,71,0.5);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    &__info-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 14px;
+        
+        &:last-child {
+            margin-bottom: 0;
+        }
+        
+        span {
+            color: $gray;
+        }
+        
+        strong {
+            color: $light;
+        }
+    }
+    
+    &__actions {
+        display: flex;
+        gap: 10px;
+    }
+}
 
-  // Вложенность: кнопка
-  &__button {
-    @include button-style($secondary-color); // Используем миксин
-  }
+.btn {
+    flex: 1;
+    
+    &--primary {
+        @include btn($primary, black);
+    }
+    
+    &--secondary {
+        @include btn(transparent, $light);
+        border: 1px solid $gray !important;
+        
+        &:hover {
+            background: rgba(255,255,255,0.1);
+        }
+    }
+}
+
+// Для адаптивности
+@media (max-width: 480px) {
+    .card {
+        max-width: 100%;
+        
+        &__image {
+            padding: 15px;
+            min-height: 200px;
+        }
+        
+        &__image img {
+            max-height: 180px;
+        }
+        
+        &__float {
+            top: 20px;
+            right: 20px;
+            font-size: 11px;
+            padding: 4px 8px;
+        }
+    }
 }
