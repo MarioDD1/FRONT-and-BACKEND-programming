@@ -7,7 +7,11 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.0",
-    "nanoid": "^5.0.0"
+    "express": "^4.22.1",
+    "nanoid": "^5.1.6"
+  },
+  "devDependencies": {
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }
