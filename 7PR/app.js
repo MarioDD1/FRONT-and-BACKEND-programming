@@ -1,20 +1,22 @@
 const express = require('express');
+const { nanoid } = require("nanoid");
 const bcrypt = require('bcrypt');
-const { nanoid } = require('nanoid');
+
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
 const app = express();
-const port = 3000;
 
-// --- Конфигурация Swagger ---
+// Автоматический выбор свободного порта
+const port = process.env.PORT || 3000;
+
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'API Auth & Products',
+            title: 'API AUTH + PRODUCTS',
             version: '1.0.0',
-            description: 'API для регистрации, авторизации и управления товарами',
+            description: 'Простое API для изучения авторизации и CRUD товаров',
         },
         servers: [
             {
@@ -23,84 +25,56 @@ const swaggerOptions = {
             },
         ],
     },
-    apis: ['./app.js'], // Указываем, что документация находится в этом файле
+    apis: ['./app.js'],
 };
 
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// --- Middleware ---
-app.use(express.json());
-
-// Логгер запросов (как в методичке)
-app.use((req, res, next) => {
-    res.on('finish', () => {
-        console.log(`[${new Date().toISOString()}][${req.method}] ${res.statusCode} ${req.path}`);
-        if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-            console.log('Body:', req.body);
-        }
-    });
-    next();
-});
-
-// --- Имитация Базы Данных (в памяти) ---
 let users = [];
 let products = [];
 
-// --- Вспомогательные функции ---
+// --------------------- HELPERS ---------------------
 
-/**
- * Хеширование пароля
- * @param {string} password 
- * @returns {Promise<string>}
- */
-async function hashPassword(password) {
-    const rounds = 10;
-    return bcrypt.hash(password, rounds);
-}
-
-/**
- * Проверка пароля
- * @param {string} password 
- * @param {string} passwordHash 
- * @returns {Promise<boolean>}
- */
-async function verifyPassword(password, passwordHash) {
-    return bcrypt.compare(password, passwordHash);
-}
-
-/**
- * Поиск пользователя по email
- */
-function findUserByEmail(email, res) {
-    const user = users.find(u => u.email === email);
+function findUserOr404(username, res) {
+    const user = users.find(u => u.username == username);
     if (!user) {
-        res.status(404).json({ error: "User not found" });
+        res.status(404).json({ error: "user not found" });
         return null;
     }
     return user;
 }
 
-/**
- * Поиск товара по ID
- */
-function findProductById(id, res) {
-    const product = products.find(p => p.id === id);
-    if (!product) {
-        res.status(404).json({ error: "Product not found" });
-        return null;
-    }
-    return product;
+async function hashPassword(password) {
+    const rounds = 10;
+    return bcrypt.hash(password, rounds);
 }
 
-// --- Маршруты Авторизации (Auth) ---
+async function verifyPassword(password, passwordHash) {
+    return bcrypt.compare(password, passwordHash);
+}
+
+// --------------------- MIDDLEWARE ---------------------
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.use(express.json());
+
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        console.log(`[${new Date().toISOString()}] [${req.method}] ${res.statusCode} ${req.path}`);
+        if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+            console.log('Body: ', req.body);
+        }
+    });
+    next();
+});
+
+// --------------------- AUTH ---------------------
 
 /**
  * @swagger
  * /api/auth/register:
  *   post:
  *     summary: Регистрация пользователя
- *     description: Создает нового пользователя с хешированным паролем
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -109,58 +83,38 @@ function findProductById(id, res) {
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - username
  *               - password
- *               - first_name
- *               - last_name
+ *               - age
  *             properties:
- *               email:
+ *               username:
  *                 type: string
- *                 example: user@example.com
  *               password:
  *                 type: string
- *                 example: qwerty123
- *               first_name:
- *                 type: string
- *                 example: Ivan
- *               last_name:
- *                 type: string
- *                 example: Ivanov
+ *               age:
+ *                 type: integer
  *     responses:
  *       201:
- *         description: Пользователь успешно создан
+ *         description: Пользователь создан
  *       400:
- *         description: Некорректные данные
- *       409:
- *         description: Email уже занят
+ *         description: Ошибка валидации
  */
 app.post("/api/auth/register", async (req, res) => {
-    const { email, password, first_name, last_name } = req.body;
+    const { username, age, password } = req.body;
 
-    // Валидация полей
-    if (!email || !password || !first_name || !last_name) {
-        return res.status(400).json({ error: "email, password, first_name and last_name are required" });
-    }
-
-    // Проверка на существующего пользователя
-    const existingUser = users.find(u => u.email === email);
-    if (existingUser) {
-        return res.status(409).json({ error: "Email already exists" });
+    if (!username || !password || age === undefined) {
+        return res.status(400).json({ error: "username, password and age are required" });
     }
 
     const newUser = {
         id: nanoid(),
-        email: email,
-        first_name: first_name,
-        last_name: last_name,
-        password: await hashPassword(password) // Хешируем пароль
+        username,
+        age: Number(age),
+        hashedPassword: await hashPassword(password)
     };
 
     users.push(newUser);
-    
-    // Возвращаем данные без пароля
-    const { password: _, ...userWithoutPassword } = newUser;
-    res.status(201).json(userWithoutPassword);
+    res.status(201).json(newUser);
 });
 
 /**
@@ -168,7 +122,6 @@ app.post("/api/auth/register", async (req, res) => {
  * /api/auth/login:
  *   post:
  *     summary: Авторизация пользователя
- *     description: Проверяет email и пароль пользователя
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -177,46 +130,43 @@ app.post("/api/auth/register", async (req, res) => {
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - username
  *               - password
  *             properties:
- *               email:
+ *               username:
  *                 type: string
- *                 example: user@example.com
  *               password:
  *                 type: string
- *                 example: qwerty123
  *     responses:
  *       200:
- *         description: Успешная авторизация
+ *         description: Успешный вход
  *       400:
- *         description: Отсутствуют обязательные поля
+ *         description: Ошибка валидации
  *       401:
- *         description: Неверные учетные данные
+ *         description: Неверные данные
  *       404:
  *         description: Пользователь не найден
  */
 app.post("/api/auth/login", async (req, res) => {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ error: "email and password are required" });
+    if (!username || !password) {
+        return res.status(400).json({ error: "username and password are required" });
     }
 
-    const user = findUserByEmail(email, res);
+    const user = findUserOr404(username, res);
     if (!user) return;
 
-    const isAuthenticated = await verifyPassword(password, user.password);
-    
+    const isAuthenticated = await verifyPassword(password, user.hashedPassword);
+
     if (isAuthenticated) {
-        // В реальном проекте здесь бы выдавался JWT токен
-        res.status(200).json({ login: true, user: { id: user.id, email: user.email, first_name: user.first_name } });
+        res.status(200).json({ login: true });
     } else {
-        res.status(401).json({ error: "Invalid credentials" });
+        res.status(401).json({ error: "not authenticated" });
     }
 });
 
-// --- Маршруты Товаров (Products) ---
+// --------------------- PRODUCTS ---------------------
 
 /**
  * @swagger
@@ -232,6 +182,8 @@ app.post("/api/auth/login", async (req, res) => {
  *             type: object
  *             required:
  *               - title
+ *               - category
+ *               - description
  *               - price
  *             properties:
  *               title:
@@ -246,18 +198,18 @@ app.post("/api/auth/login", async (req, res) => {
  *       201:
  *         description: Товар создан
  */
-app.post("/api/products", async (req, res) => {
+app.post("/api/products", (req, res) => {
     const { title, category, description, price } = req.body;
 
-    if (!title || price === undefined) {
-        return res.status(400).json({ error: "title and price are required" });
+    if (!title || !category || !description || price === undefined) {
+        return res.status(400).json({ error: "All fields are required" });
     }
 
     const newProduct = {
         id: nanoid(),
         title,
-        category: category || "",
-        description: description || "",
+        category,
+        description,
         price: Number(price)
     };
 
@@ -276,14 +228,14 @@ app.post("/api/products", async (req, res) => {
  *         description: Список товаров
  */
 app.get("/api/products", (req, res) => {
-    res.status(200).json(products);
+    res.json(products);
 });
 
 /**
  * @swagger
  * /api/products/{id}:
  *   get:
- *     summary: Получить товар по id
+ *     summary: Получить товар по ID
  *     tags: [Products]
  *     parameters:
  *       - in: path
@@ -293,21 +245,25 @@ app.get("/api/products", (req, res) => {
  *           type: string
  *     responses:
  *       200:
- *         description: Данные товара
+ *         description: Найденный товар
  *       404:
  *         description: Товар не найден
  */
 app.get("/api/products/:id", (req, res) => {
-    const product = findProductById(req.params.id, res);
-    if (!product) return;
-    res.status(200).json(product);
+    const product = products.find(p => p.id === req.params.id);
+
+    if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.json(product);
 });
 
 /**
  * @swagger
  * /api/products/{id}:
  *   put:
- *     summary: Обновить параметры товара
+ *     summary: Обновить товар
  *     tags: [Products]
  *     parameters:
  *       - in: path
@@ -321,15 +277,27 @@ app.get("/api/products/:id", (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
  *     responses:
  *       200:
- *         description: Товар обновлен
+ *         description: Товар обновлён
  *       404:
  *         description: Товар не найден
  */
 app.put("/api/products/:id", (req, res) => {
-    const product = findProductById(req.params.id, res);
-    if (!product) return;
+    const product = products.find(p => p.id === req.params.id);
+
+    if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+    }
 
     const { title, category, description, price } = req.body;
 
@@ -338,7 +306,7 @@ app.put("/api/products/:id", (req, res) => {
     if (description) product.description = description;
     if (price !== undefined) product.price = Number(price);
 
-    res.status(200).json(product);
+    res.json(product);
 });
 
 /**
@@ -355,23 +323,24 @@ app.put("/api/products/:id", (req, res) => {
  *           type: string
  *     responses:
  *       200:
- *         description: Товар удален
+ *         description: Товар удалён
  *       404:
  *         description: Товар не найден
  */
 app.delete("/api/products/:id", (req, res) => {
     const index = products.findIndex(p => p.id === req.params.id);
-    
+
     if (index === -1) {
         return res.status(404).json({ error: "Product not found" });
     }
 
-    const deletedProduct = products.splice(index, 1)[0];
-    res.status(200).json({ message: "Product deleted", product: deletedProduct });
+    products.splice(index, 1);
+    res.json({ deleted: true });
 });
 
-// --- Запуск сервера ---
+// --------------------- START SERVER ---------------------
+
 app.listen(port, () => {
     console.log(`Сервер запущен на http://localhost:${port}`);
-    console.log(`Swagger UI доступен по адресу http://localhost:${port}/api-docs`);
+    console.log(`Swagger UI: http://localhost:${port}/api-docs`);
 });

@@ -1,17 +1,16 @@
 {
   "name": "auth-products-api",
   "version": "1.0.0",
-  "description": "API для авторизации и управления товарами",
+  "description": "Учебный сервер Node.js для авторизации и CRUD товаров",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node app.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "bcrypt": "^5.1.1",
-    "nanoid": "^3.3.6",
+    "express": "^4.18.2",
+    "nanoid": "^4.0.2",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-ui-express": "^4.6.3"
   }
 }
