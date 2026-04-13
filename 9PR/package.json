@@ -1,0 +1,17 @@
+{
+  "name": "auth-products-api-refresh",
+  "version": "1.0.0",
+  "description": "Practice work 9: JWT access and refresh tokens with product CRUD",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^4.0.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
