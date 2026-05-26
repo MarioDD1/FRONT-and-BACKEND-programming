@@ -44,6 +44,32 @@ let currentUserId = 1;
 let currentProductId = 1;
 
 app.use(express.json());
+
+// Basic CORS (dev-friendly). Set CORS_ORIGINS as comma-separated list to restrict.
+const corsAllowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+
+    if (!origin) {
+        return next();
+    }
+
+    const allowAny = corsAllowedOrigins.length === 0;
+    const isAllowed = allowAny || corsAllowedOrigins.includes(origin);
+
+    if (isAllowed) {
+        res.setHeader('Access-Control-Allow-Origin', allowAny ? '*' : origin);
+        res.setHeader('Vary', 'Origin');
+        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    }
+
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(isAllowed ? 204 : 403);
+    }
+
+    return next();
+});
 async function hashPassword(password) {
     return bcrypt.hash(password, 10);
 }
