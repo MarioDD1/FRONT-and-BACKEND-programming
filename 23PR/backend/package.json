@@ -1,0 +1,20 @@
+{
+  "name": "pr23-docker-backend",
+  "version": "1.0.1",
+  "description": "Практика 23: простой backend для Docker Compose и Nginx",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js"
+  },
+  "keywords": [
+    "express",
+    "docker",
+    "nginx",
+    "practice"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

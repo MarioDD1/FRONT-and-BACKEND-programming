@@ -1,7 +1,7 @@
 {
-  "name": "Заметки — офлайн-приложение",
-  "short_name": "Заметки",
-  "description": "Приложение для ведения заметок с поддержкой офлайн-режима",
+  "name": "Заметки — практика 14",
+  "short_name": "Заметки 14",
+  "description": "Простое приложение для заметок с офлайн-режимом",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",

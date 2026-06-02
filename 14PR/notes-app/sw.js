@@ -1,4 +1,5 @@
-const CACHE_NAME = 'notes-cache-v3';
+const CACHE_NAME = 'practice-14-notes-v1';
+const CDN_URL = 'https://unpkg.com/chota@latest';
 const ASSETS = [
     './',
     './index.html',
@@ -15,11 +16,10 @@ self.addEventListener('install', event => {
             await cache.addAll(ASSETS);
 
             try {
-                const cdnUrl = 'https://unpkg.com/chota@latest';
-                const response = await fetch(cdnUrl, { mode: 'no-cors' });
-                await cache.put(cdnUrl, response);
+                const response = await fetch(CDN_URL, { mode: 'no-cors' });
+                await cache.put(CDN_URL, response);
             } catch (e) {
-                console.warn('CDN не закэшировался при установке:', e);
+                console.warn('Не удалось сохранить CDN-файл в кэш:', e);
             }
         }).then(() => self.skipWaiting())
     );

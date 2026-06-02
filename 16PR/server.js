@@ -13,7 +13,7 @@ const vapidKeys = {
 };
 
 webpush.setVapidDetails(
-  'mailto:your-email@example.com',
+  'mailto:student@example.com',
   vapidKeys.publicKey,
   vapidKeys.privateKey,
 );
@@ -21,7 +21,6 @@ webpush.setVapidDetails(
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-
 app.use(express.static(path.join(__dirname, 'notes-app')));
 
 let subscriptions = [];
@@ -30,13 +29,13 @@ const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: '*', methods: ['GET', 'POST'] } });
 
 io.on('connection', (socket) => {
-  console.log('Клиент подключён:', socket.id);
+  console.log('Клиент подключен:', socket.id);
 
   socket.on('newTask', (task) => {
     io.emit('taskAdded', task);
 
     const payload = JSON.stringify({
-      title: 'Новая задача',
+      title: 'Новая заметка',
       body: task?.text || '',
     });
 
@@ -48,7 +47,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('Клиент отключён:', socket.id);
+    console.log('Клиент отключен:', socket.id);
   });
 });
 
@@ -78,4 +77,3 @@ const PORT = 3001;
 server.listen(PORT, () => {
   console.log(`Сервер запущен на http://localhost:${PORT}`);
 });
-

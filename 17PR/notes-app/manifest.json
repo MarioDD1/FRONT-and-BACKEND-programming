@@ -1,11 +1,11 @@
 {
-  "name": "Заметки — офлайн-приложение",
-  "short_name": "Заметки",
-  "description": "Приложение для ведения заметок с поддержкой офлайн-режима",
+  "name": "Заметки и напоминания — практика 17",
+  "short_name": "Заметки 17",
+  "description": "Учебное приложение для заметок с push-напоминаниями",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4a7c3f",
+  "theme_color": "#376a64",
   "lang": "ru",
   "icons": [
     {

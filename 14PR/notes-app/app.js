@@ -1,10 +1,9 @@
-// Элементы DOM
 const form = document.getElementById('note-form');
 const input = document.getElementById('note-input');
 const list = document.getElementById('notes-list');
 const banner = document.getElementById('offline-banner');
+const STORAGE_KEY = 'practice-14-notes';
 
-// Офлайн-индикатор
 function updateOnlineStatus() {
     banner.classList.toggle('visible', !navigator.onLine);
 }
@@ -13,41 +12,54 @@ window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
 
-// Загрузка заметок из localStorage при старте
-function loadNotes() {
-    const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-    list.innerHTML = notes.map(note => `<li>${note}</li>`).join('');
+function getNotes() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem('notes') || '[]');
 }
 
-// Сохранение заметки
+function loadNotes() {
+    const notes = getNotes();
+    list.innerHTML = '';
+
+    if (!notes.length) {
+        const emptyItem = document.createElement('li');
+        emptyItem.textContent = 'Записей пока нет';
+        list.appendChild(emptyItem);
+        return;
+    }
+
+    notes.forEach((note, index) => {
+        const item = document.createElement('li');
+        item.textContent = `${index + 1}. ${note}`;
+        list.appendChild(item);
+    });
+}
+
 function addNote(text) {
-    const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-    notes.push(text);
-    localStorage.setItem('notes', JSON.stringify(notes));
+    const notes = getNotes();
+    notes.unshift(text);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
     loadNotes();
 }
 
-// Обработка отправки формы
 form.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = input.value.trim();
     if (text) {
         addNote(text);
         input.value = '';
+        input.focus();
     }
 });
 
-// Первоначальная загрузка
 loadNotes();
 
-// Регистрация Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
             const registration = await navigator.serviceWorker.register('./sw.js');
-            console.log('ServiceWorker зарегистрирован:', registration.scope);
+            console.log('Service Worker зарегистрирован:', registration.scope);
         } catch (err) {
-            console.error('Ошибка регистрации ServiceWorker:', err);
+            console.error('Ошибка регистрации Service Worker:', err);
         }
     });
 }

@@ -4,39 +4,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Заметки (13-18)</title>
+    <title>Мои заметки — практика 13</title>
     <link rel="stylesheet" href="https://unpkg.com/chota@latest">
     <style>
-        body { max-width: 640px; margin: 0 auto; padding: 1rem; }
+        body {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        h1 { margin: 0; }
         #offline-banner {
             display: none;
             background: #f0ad4e;
             color: #fff;
             padding: 0.5rem 1rem;
             border-radius: 4px;
-            margin-bottom: 1rem;
             font-weight: bold;
         }
         #offline-banner.visible { display: block; }
+        main {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        #note-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        #note-input { width: 100%; }
+        #notes-list {
+            margin-top: 0;
+            padding-left: 0;
+        }
         #notes-list li {
             padding: 0.5rem 0;
             border-bottom: 1px solid #eee;
             list-style: none;
         }
+        @media (max-width: 650px) {
+            header,
+            main {
+                display: block;
+            }
+            #offline-banner { margin-top: 0.75rem; }
+        }
     </style>
 </head>
 
 <body>
-    <h1>Заметки — офлайн-приложение</h1>
+    <header>
+        <h1>Заметки офлайн</h1>
+        <div id="offline-banner">Нет подключения</div>
+    </header>
 
-    <div id="offline-banner">Офлайн-режим: изменения сохраняются локально</div>
+    <main>
+        <form id="note-form">
+            <label for="note-input">Новая заметка</label>
+            <input type="text" id="note-input" placeholder="Введите текст" required>
+            <button class="button primary" type="submit">Сохранить</button>
+        </form>
 
-    <form id="note-form" class="row">
-        <input class="col-9" type="text" id="note-input" placeholder="Введите заметку" required>
-        <button class="col-3 button primary" type="submit">Добавить</button>
-    </form>
-
-    <ul id="notes-list"></ul>
+        <section>
+            <h2>Список заметок</h2>
+            <ul id="notes-list"></ul>
+        </section>
+    </main>
 
     <script src="app.js"></script>
 </body>

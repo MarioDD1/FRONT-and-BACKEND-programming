@@ -1,5 +1,5 @@
-const STATIC_CACHE_NAME = 'app-shell-v1';
-const DYNAMIC_CACHE_NAME = 'dynamic-content-v1';
+const STATIC_CACHE_NAME = 'practice-15-shell-v2';
+const DYNAMIC_CACHE_NAME = 'practice-15-pages-v2';
 
 const APP_SHELL_ASSETS = [
   './',
@@ -61,7 +61,6 @@ async function cacheFirst(request) {
   return response;
 }
 
-// Для статики – Cache First, для контента – Network First
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 

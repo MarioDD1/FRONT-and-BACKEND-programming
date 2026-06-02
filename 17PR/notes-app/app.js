@@ -1,6 +1,7 @@
 const contentDiv = document.getElementById('app-content');
 const homeBtn = document.getElementById('home-btn');
 const aboutBtn = document.getElementById('about-btn');
+const STORAGE_KEY = 'practice-17-notes';
 
 const VAPID_PUBLIC_KEY =
     'BD9vKlmYgWp7eIj3yaayXYJShCEcjhWs_c3qZ2q12k7Z-qH1yMqMvQb9HM6V-glp_gfUix6tU0qOlqmcIxE3Cjc';
@@ -9,27 +10,26 @@ const socket = typeof io === 'function' ? io() : null;
 
 function showToast(text) {
     const toast = document.createElement('div');
+    toast.className = 'toast';
     toast.textContent = text;
-    toast.style.cssText = `
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        background: #4285f4;
-        color: white;
-        padding: 1rem;
-        border-radius: 5px;
-        z-index: 1000;
-        max-width: 320px;
-    `;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 }
 
 if (socket) {
     socket.on('taskAdded', (task) => {
-        const text = task?.text ? `Новая задача: ${task.text}` : 'Новая задача';
+        const text = task?.text ? `Новая запись: ${task.text}` : 'Добавлена новая запись';
         showToast(text);
     });
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -77,10 +77,8 @@ async function initPushUi(registration) {
     if (!enableBtn || !disableBtn) return;
 
     const existing = await registration.pushManager.getSubscription();
-    if (existing) {
-        enableBtn.style.display = 'none';
-        disableBtn.style.display = 'inline-block';
-    }
+    enableBtn.style.display = existing ? 'none' : 'inline-block';
+    disableBtn.style.display = existing ? 'inline-block' : 'none';
 
     enableBtn.addEventListener('click', async () => {
         if (Notification.permission === 'denied') {
@@ -90,7 +88,7 @@ async function initPushUi(registration) {
         if (Notification.permission === 'default') {
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                alert('Необходимо разрешить уведомления.');
+                alert('Нужно разрешить уведомления.');
                 return;
             }
         }
@@ -128,12 +126,11 @@ async function loadContent(page) {
         const html = await response.text();
         contentDiv.innerHTML = html;
 
-// Если загружена главная страница, инициализируем функционал заметок
         if (page === 'home') {
             initNotes();
         }
     } catch (err) {
-        contentDiv.innerHTML = `<p class="is-center text-error">Ошибка загрузки страницы.</p>`;
+        contentDiv.innerHTML = '<p class="empty-state">Не удалось загрузить страницу.</p>';
         console.error(err);
     }
 }
@@ -148,10 +145,8 @@ aboutBtn.addEventListener('click', () => {
     loadContent('about');
 });
 
-// Загружаем главную страницу при старте
 loadContent('home');
 
-// Функционал заметок (localStorage)
 function initNotes() {
     const form = document.getElementById('note-form');
     const input = document.getElementById('note-input');
@@ -160,28 +155,40 @@ function initNotes() {
     const reminderTime = document.getElementById('reminder-time');
     const list = document.getElementById('notes-list');
 
-    function loadNotes() {
-        const notes = JSON.parse(localStorage.getItem('notes') || '[]').map((n) => {
-            if (typeof n === 'string') {
-                return { id: Date.now(), text: n, createdAt: Date.now(), reminder: null };
+    function getNotes() {
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('notes') || '[]';
+        return JSON.parse(raw).map((note) => {
+            if (typeof note === 'string') {
+                return { id: Date.now(), text: note, createdAt: Date.now(), reminder: null };
             }
-            return n;
+            return note;
         });
+    }
 
-        list.innerHTML = notes.map(note => `
-            <li class="card" style="margin-bottom: 0.5rem; padding: 0.5rem;">
-                ${note.text}
-                <br><small>${new Date(note.createdAt).toLocaleString()}</small>
-                ${note.reminder ? `<br><small>!!! Напоминание: ${new Date(note.reminder).toLocaleString()}</small>` : ''}
+    function loadNotes() {
+        const notes = getNotes();
+
+        if (!notes.length) {
+            list.innerHTML = '<li class="empty-state">Пока нет заметок. Добавьте первую запись выше.</li>';
+            return;
+        }
+
+        list.innerHTML = notes.map((note, index) => `
+            <li class="note-card">
+                <p class="note-text">${index + 1}. ${escapeHtml(note.text)}</p>
+                <div class="note-meta">
+                    <span>Создано: ${new Date(note.createdAt).toLocaleString()}</span>
+                    ${note.reminder ? `<span class="reminder-badge">Напомнить: ${new Date(note.reminder).toLocaleString()}</span>` : ''}
+                </div>
             </li>
         `).join('');
     }
 
     function addNote(text, reminderTimestamp = null) {
-        const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        const notes = getNotes();
         const note = { id: Date.now(), text, createdAt: Date.now(), reminder: reminderTimestamp };
-        notes.push(note);
-        localStorage.setItem('notes', JSON.stringify(notes));
+        notes.unshift(note);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
         loadNotes();
 
         socket?.emit('newTask', { id: note.id, text: note.text, timestamp: note.createdAt });
@@ -196,6 +203,7 @@ function initNotes() {
         if (text) {
             addNote(text);
             input.value = '';
+            input.focus();
         }
     });
 
@@ -224,15 +232,14 @@ function initNotes() {
     loadNotes();
 }
 
-// Регистрация Service Worker 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
             const reg = await navigator.serviceWorker.register('sw.js');
-            console.log('SW registered:', reg.scope);
+            console.log('Service worker зарегистрирован:', reg.scope);
             await initPushUi(reg);
         } catch (err) {
-            console.log('SW registration failed:', err);
+            console.log('Ошибка регистрации service worker:', err);
         }
     });
 }

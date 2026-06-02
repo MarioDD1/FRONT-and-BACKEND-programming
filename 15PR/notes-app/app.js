@@ -1,6 +1,7 @@
 const contentDiv = document.getElementById('app-content');
 const homeBtn = document.getElementById('home-btn');
 const aboutBtn = document.getElementById('about-btn');
+const STORAGE_KEY = 'practice-15-notes';
 
 function setActiveButton(activeId) {
     [homeBtn, aboutBtn].forEach(btn => btn.classList.remove('active'));
@@ -13,12 +14,11 @@ async function loadContent(page) {
         const html = await response.text();
         contentDiv.innerHTML = html;
 
-// Если загружена главная страница, инициализируем функционал заметок
         if (page === 'home') {
             initNotes();
         }
     } catch (err) {
-        contentDiv.innerHTML = `<p class="is-center text-error">Ошибка загрузки страницы.</p>`;
+        contentDiv.innerHTML = '<p class="is-center text-error">Не удалось загрузить страницу.</p>';
         console.error(err);
     }
 }
@@ -33,24 +33,42 @@ aboutBtn.addEventListener('click', () => {
     loadContent('about');
 });
 
-// Загружаем главную страницу при старте
 loadContent('home');
 
-// Функционал заметок (localStorage)
+function getNotes() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem('notes') || '[]');
+}
+
 function initNotes() {
     const form = document.getElementById('note-form');
     const input = document.getElementById('note-input');
     const list = document.getElementById('notes-list');
 
     function loadNotes() {
-        const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-        list.innerHTML = notes.map(note => `<li class="card" style="margin-bottom: 0.5rem; padding: 0.5rem;">${note}</li>`).join('');
+        const notes = getNotes();
+        list.innerHTML = '';
+
+        if (!notes.length) {
+            const emptyItem = document.createElement('li');
+            emptyItem.textContent = 'Список пока пуст';
+            list.appendChild(emptyItem);
+            return;
+        }
+
+        notes.forEach((note, index) => {
+            const item = document.createElement('li');
+            item.className = 'card';
+            item.style.marginBottom = '0.5rem';
+            item.style.padding = '0.5rem';
+            item.textContent = `${index + 1}. ${note}`;
+            list.appendChild(item);
+        });
     }
 
     function addNote(text) {
-        const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-        notes.push(text);
-        localStorage.setItem('notes', JSON.stringify(notes));
+        const notes = getNotes();
+        notes.unshift(text);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
         loadNotes();
     }
 
@@ -60,13 +78,13 @@ function initNotes() {
         if (text) {
             addNote(text);
             input.value = '';
+            input.focus();
         }
     });
 
     loadNotes();
 }
 
-// Регистрация Service Worker 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')

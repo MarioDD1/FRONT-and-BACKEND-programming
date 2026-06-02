@@ -1,6 +1,7 @@
 const contentDiv = document.getElementById('app-content');
 const homeBtn = document.getElementById('home-btn');
 const aboutBtn = document.getElementById('about-btn');
+const STORAGE_KEY = 'practice-16-notes';
 
 const VAPID_PUBLIC_KEY =
     'BD9vKlmYgWp7eIj3yaayXYJShCEcjhWs_c3qZ2q12k7Z-qH1yMqMvQb9HM6V-glp_gfUix6tU0qOlqmcIxE3Cjc';
@@ -27,7 +28,7 @@ function showToast(text) {
 
 if (socket) {
     socket.on('taskAdded', (task) => {
-        const text = task?.text ? `Новая задача: ${task.text}` : 'Новая задача';
+        const text = task?.text ? `Новая заметка: ${task.text}` : 'Добавлена новая заметка';
         showToast(text);
     });
 }
@@ -77,20 +78,18 @@ async function initPushUi(registration) {
     if (!enableBtn || !disableBtn) return;
 
     const existing = await registration.pushManager.getSubscription();
-    if (existing) {
-        enableBtn.style.display = 'none';
-        disableBtn.style.display = 'inline-block';
-    }
+    enableBtn.style.display = existing ? 'none' : 'inline-block';
+    disableBtn.style.display = existing ? 'inline-block' : 'none';
 
     enableBtn.addEventListener('click', async () => {
         if (Notification.permission === 'denied') {
-            alert('Уведомления запрещены. Разрешите их в настройках браузера.');
+            alert('Уведомления запрещены в настройках браузера.');
             return;
         }
         if (Notification.permission === 'default') {
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                alert('Необходимо разрешить уведомления.');
+                alert('Нужно разрешить уведомления.');
                 return;
             }
         }
@@ -128,12 +127,11 @@ async function loadContent(page) {
         const html = await response.text();
         contentDiv.innerHTML = html;
 
-// Если загружена главная страница, инициализируем функционал заметок
         if (page === 'home') {
             initNotes();
         }
     } catch (err) {
-        contentDiv.innerHTML = `<p class="is-center text-error">Ошибка загрузки страницы.</p>`;
+        contentDiv.innerHTML = '<p class="is-center text-error">Не удалось загрузить страницу.</p>';
         console.error(err);
     }
 }
@@ -148,30 +146,53 @@ aboutBtn.addEventListener('click', () => {
     loadContent('about');
 });
 
-// Загружаем главную страницу при старте
 loadContent('home');
 
-// Функционал заметок (localStorage)
+function getNotes() {
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('notes') || '[]';
+    return JSON.parse(raw).map(note => (
+        typeof note === 'string'
+            ? { id: Date.now(), text: note, createdAt: Date.now() }
+            : note
+    ));
+}
+
 function initNotes() {
     const form = document.getElementById('note-form');
     const input = document.getElementById('note-input');
     const list = document.getElementById('notes-list');
 
     function loadNotes() {
-        const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-        list.innerHTML = notes.map(note => `
-            <li class="card" style="margin-bottom: 0.5rem; padding: 0.5rem;">
-                ${note.text}
-                <br><small>${new Date(note.createdAt).toLocaleString()}</small>
-            </li>
-        `).join('');
+        const notes = getNotes();
+        list.innerHTML = '';
+
+        if (!notes.length) {
+            const emptyItem = document.createElement('li');
+            emptyItem.textContent = 'Заметок пока нет';
+            list.appendChild(emptyItem);
+            return;
+        }
+
+        notes.forEach((note, index) => {
+            const item = document.createElement('li');
+            item.className = 'card';
+            item.style.marginBottom = '0.5rem';
+            item.style.padding = '0.5rem';
+            item.textContent = `${index + 1}. ${note.text}`;
+
+            const date = document.createElement('small');
+            date.textContent = ` ${new Date(note.createdAt).toLocaleString()}`;
+            item.appendChild(document.createElement('br'));
+            item.appendChild(date);
+            list.appendChild(item);
+        });
     }
 
     function addNote(text) {
-        const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        const notes = getNotes();
         const note = { id: Date.now(), text, createdAt: Date.now() };
-        notes.push(note);
-        localStorage.setItem('notes', JSON.stringify(notes));
+        notes.unshift(note);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
         loadNotes();
 
         socket?.emit('newTask', { id: note.id, text: note.text, timestamp: note.createdAt });
@@ -183,13 +204,13 @@ function initNotes() {
         if (text) {
             addNote(text);
             input.value = '';
+            input.focus();
         }
     });
 
     loadNotes();
 }
 
-// Регистрация Service Worker 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {

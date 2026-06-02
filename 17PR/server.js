@@ -13,7 +13,7 @@ const vapidKeys = {
 };
 
 webpush.setVapidDetails(
-  'mailto:your-email@example.com',
+  'mailto:student@example.com',
   vapidKeys.publicKey,
   vapidKeys.privateKey,
 );
@@ -21,7 +21,6 @@ webpush.setVapidDetails(
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-
 app.use(express.static(path.join(__dirname, 'notes-app')));
 
 let subscriptions = [];
@@ -30,21 +29,22 @@ const reminders = new Map();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: '*', methods: ['GET', 'POST'] } });
 
+function sendPush(payload) {
+  subscriptions.forEach((sub) => {
+    webpush
+      .sendNotification(sub, JSON.stringify(payload))
+      .catch((err) => console.error('Push error:', err));
+  });
+}
+
 io.on('connection', (socket) => {
-  console.log('Клиент подключён:', socket.id);
+  console.log('Клиент подключен:', socket.id);
 
   socket.on('newTask', (task) => {
     io.emit('taskAdded', task);
-
-    const payload = JSON.stringify({
-      title: 'Новая задача',
+    sendPush({
+      title: 'Новая запись',
       body: task?.text || '',
-    });
-
-    subscriptions.forEach((sub) => {
-      webpush
-        .sendNotification(sub, payload)
-        .catch((err) => console.error('Push error:', err));
     });
   });
 
@@ -62,16 +62,10 @@ io.on('connection', (socket) => {
     if (existing?.timeoutId) clearTimeout(existing.timeoutId);
 
     const timeoutId = setTimeout(() => {
-      const payload = JSON.stringify({
-        title: '!!! Напоминание',
+      sendPush({
+        title: 'Напоминание',
         body: text,
         reminderId,
-      });
-
-      subscriptions.forEach((sub) => {
-        webpush
-          .sendNotification(sub, payload)
-          .catch((err) => console.error('Push error:', err));
       });
 
       reminders.delete(reminderId);
@@ -81,7 +75,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('Клиент отключён:', socket.id);
+    console.log('Клиент отключен:', socket.id);
   });
 });
 
@@ -118,16 +112,10 @@ app.post('/snooze', (req, res) => {
 
   const newDelay = 5 * 60 * 1000;
   const newTimeoutId = setTimeout(() => {
-    const payload = JSON.stringify({
-      title: 'Напоминание отложено',
+    sendPush({
+      title: 'Отложенное напоминание',
       body: reminder.text,
       reminderId,
-    });
-
-    subscriptions.forEach((sub) => {
-      webpush
-        .sendNotification(sub, payload)
-        .catch((err) => console.error('Push error:', err));
     });
 
     reminders.delete(reminderId);
