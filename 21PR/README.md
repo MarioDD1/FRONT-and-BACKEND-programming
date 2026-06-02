@@ -72,8 +72,46 @@ npm start
 http://localhost:3000
 ```
 
-## Файл задания
+Перейди в папку:
+cd C:\Users\user\Project\FRONT_and_BACKEND_programming\21PR
+Установи зависимости:
+npm install
+Создай .env:
+Copy-Item .env.example .env
+Запусти Redis.
+Если есть Docker:
 
-```text
-Задание_21.pdf
-```
+docker run -d --name redis-pr21 -p 6379:6379 redis
+Если контейнер уже был создан:
+
+docker start redis-pr21
+Запусти сервер:
+npm start
+Сервер будет тут:
+
+http://localhost:3000
+Проверка:
+
+Invoke-RestMethod http://localhost:3000/health
+Что нужно сделать по работе:
+
+Войти под админом:
+$login = Invoke-RestMethod -Method POST -Uri http://localhost:3000/api/auth/login -ContentType "application/json" -Body '{"email":"admin@example.com","password":"admin123"}'
+Сохранить токен:
+$token = $login.accessToken
+Проверить свой профиль:
+Invoke-RestMethod -Uri http://localhost:3000/api/auth/me -Headers @{ Authorization = "Bearer $token" }
+Проверить список пользователей:
+Invoke-RestMethod -Uri http://localhost:3000/api/users -Headers @{ Authorization = "Bearer $token" }
+Первый раз ответ будет:
+
+"source": "server"
+Второй раз:
+
+"source": "cache"
+Проверить товары:
+Invoke-RestMethod -Uri http://localhost:3000/api/products -Headers @{ Authorization = "Bearer $token" }
+Повтори команду второй раз, чтобы увидеть кэш.
+
+Проверить фильтр товаров:
+Invoke-RestMethod -Uri "http://localhost:3000/api/products?category=electronics" -Headers @{ Authorization = "Bearer $token" }

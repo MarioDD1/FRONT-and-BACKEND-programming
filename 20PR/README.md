@@ -27,6 +27,12 @@ npm install
 Copy-Item .env.example .env
 npm start
 ```
+Get-Service MongoDB
+cd C:\Users\user\Project\FRONT_and_BACKEND_programming\20PR
+
+curl http://localhost:3000/api/users
+
+curl http://localhost:3000/api/users
 
 ## Пример запроса
 
